@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-search
+  namespace: agent-search
+spec:
+  selector:
+    app: agent-search
+  ports:
+    - port: 80
+      targetPort: 8651
+      protocol: TCP
+      name: http

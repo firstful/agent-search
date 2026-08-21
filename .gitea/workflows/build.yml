@@ -1,0 +1,10 @@
+name: build
+
+on: [push]
+
+jobs:
+  build:
+    uses: reeds/ci-pipelines/.gitea/workflows/build-python.yml@main
+    with:
+      image: reeds/agent-search
+    secrets: inherit

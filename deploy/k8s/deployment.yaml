@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-search
+  namespace: agent-search
+  # Egress declaration (CI-gated against ledger/hostnames.yaml): the three
+  # search provider APIs. NetworkPolicy is ingress-only (see networkpolicy.yaml
+  # — cluster egress netpol rules are flaky, llm pattern 2026-08-10).
+  annotations:
+    ffilt.us/egress-hosts: "api.firecrawl.dev api.exa.ai api.tavily.com"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent-search
+  template:
+    metadata:
+      labels:
+        app: agent-search
+    spec:
+      containers:
+        - name: agent-search
+          image: 192.168.1.2:3000/reeds/agent-search:__SHA8__
+          ports:
+            - containerPort: 8651
+          env:
+            - name: PORT
+              value: "8651"
+            - name: FIRECRAWL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: agent-search-keys
+                  key: FIRECRAWL_API_KEY
+            - name: EXA_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: agent-search-keys
+                  key: EXA_API_KEY
+            - name: TAVILY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: agent-search-keys
+                  key: TAVILY_API_KEY
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8651
+            initialDelaySeconds: 3
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8651
+            initialDelaySeconds: 10
+            periodSeconds: 20
+            timeoutSeconds: 3
+      volumes:
+        - name: tmp
+          emptyDir: {}

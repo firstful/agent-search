@@ -1,0 +1,15 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: agent-search
+  namespace: agent-search
+spec:
+  entryPoints:
+    - web
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`agent-search.ffilt.us`)
+      services:
+        - name: agent-search
+          port: 80

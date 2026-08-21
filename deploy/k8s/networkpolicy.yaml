@@ -1,0 +1,28 @@
+# NetworkPolicy — agent-search (default-deny INGRESS only)
+#
+# Pattern (llm, 2026-08-10): default-deny ingress, only Traefik (kube-system)
+# may reach :8651. NO egress rules — k3s netpol EGRESS rules intermittently
+# drop NEW outbound connections (~4.76s SYN timeout), reproduced on both
+# workers. agent-search's egress (provider HTTPS APIs: api.firecrawl.dev,
+# api.exa.ai, api.tavily.com) is legitimate outbound traffic, so egress
+# policing is dropped rather than breaking searches.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: agent-search
+  namespace: agent-search
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: traefik
+      ports:
+        - protocol: TCP
+          port: 8651
