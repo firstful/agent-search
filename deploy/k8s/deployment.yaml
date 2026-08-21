@@ -3,11 +3,13 @@ kind: Deployment
 metadata:
   name: agent-search
   namespace: agent-search
-  # Egress declaration (CI-gated against ledger/hostnames.yaml): the three
-  # search provider APIs. NetworkPolicy is ingress-only (see networkpolicy.yaml
-  # — cluster egress netpol rules are flaky, llm pattern 2026-08-10).
+  # Egress declaration (CI-gated against ledger/hostnames.yaml): NONE via
+  # *.ffilt.us / *.homelab.internal — agent-search's outbound calls are to
+  # EXTERNAL provider APIs (api.firecrawl.dev, api.exa.ai, api.tavily.com),
+  # which are not ledger hostnames. NetworkPolicy is ingress-only (see
+  # networkpolicy.yaml — cluster egress netpol rules are flaky, llm pattern).
   annotations:
-    ffilt.us/egress-hosts: "api.firecrawl.dev api.exa.ai api.tavily.com"
+    ffilt.us/egress-hosts: ""
 spec:
   replicas: 1
   selector:
